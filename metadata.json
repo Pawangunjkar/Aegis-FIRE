@@ -1,0 +1,6 @@
+{
+  "name": "Aegis FIRE",
+  "description": "Privacy-first offline FIRE and Tax-Drag financial engine.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

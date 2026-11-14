@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">Aegis FIRE</string>
+    <string name="app_tagline">THE ARCHITECT</string>
+    <string name="tab_fire">FIRE</string>
+    <string name="tab_calculators">Calculators</string>
+    <string name="tab_portfolio">Portfolio</string>
+    <string name="tab_roadmap">Roadmap</string>
+</resources>
