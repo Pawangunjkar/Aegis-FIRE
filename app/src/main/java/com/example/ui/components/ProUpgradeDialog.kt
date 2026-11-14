@@ -111,6 +111,12 @@ fun ProUpgradeDialog(
                         fontSize = 11.sp
                     )
                 }
+
+                Text(
+                    text = "Crafted by Pawan Gunjkar • pawangunjkar@gmail.com",
+                    color = TextMuted,
+                    fontSize = 10.sp
+                )
             }
         },
         confirmButton = {

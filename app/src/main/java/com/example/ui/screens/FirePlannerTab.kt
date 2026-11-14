@@ -32,6 +32,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -45,6 +48,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.models.AppTab
 import com.example.providers.FireViewModel
+import com.example.ui.components.AboutAuthorDialog
+import com.example.ui.components.AuthorFooterBadge
 import com.example.ui.components.DailyTipCard
 import com.example.ui.components.FiScoreCompactBanner
 import com.example.ui.components.LegendDot
@@ -69,7 +74,8 @@ fun FirePlannerTab(
     viewModel: FireViewModel,
     isAdLoading: Boolean,
     onRunMonteCarlo: () -> Unit,
-    onExportPdf: () -> Unit
+    onExportPdf: () -> Unit,
+    onFeedbackMessage: (String) -> Unit = {}
 ) {
     val context = LocalContext.current
     val haptic = LocalHapticFeedback.current
@@ -80,6 +86,7 @@ fun FirePlannerTab(
     val fiScoreSummary by viewModel.fiScoreSummary.collectAsState()
     val dailyTip by viewModel.dailyTip.collectAsState()
     val bookmarkedTipIds by viewModel.bookmarkedTipIds.collectAsState()
+    var showAuthorDialog by remember { mutableStateOf(false) }
 
     val maxExpense = if (isIndian) 5_00_000f else 25_000f
     val maxSavings = if (isIndian) 5_00_00_000f else 5_000_000f
@@ -385,6 +392,15 @@ fun FirePlannerTab(
             }
         }
 
+        Spacer(modifier = Modifier.height(14.dp))
+        AuthorFooterBadge(onClick = { showAuthorDialog = true })
         Spacer(modifier = Modifier.height(24.dp))
+    }
+
+    if (showAuthorDialog) {
+        AboutAuthorDialog(
+            onFeedbackMessage = onFeedbackMessage,
+            onDismiss = { showAuthorDialog = false }
+        )
     }
 }

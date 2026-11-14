@@ -50,6 +50,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.providers.FireViewModel
 import com.example.services.CsvExportScope
+import com.example.ui.components.AboutAuthorCard
 import com.example.ui.components.CsvExportCard
 import com.example.ui.components.FiScoreGamificationSection
 import com.example.ui.components.MetricCard
@@ -315,6 +316,8 @@ fun RoadmapTab(
             }
         }
 
+        Spacer(modifier = Modifier.height(20.dp))
+        AboutAuthorCard(onFeedbackMessage = onExportFeedback)
         Spacer(modifier = Modifier.height(24.dp))
     }
 }

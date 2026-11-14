@@ -31,10 +31,14 @@ import com.example.services.CsvExportService
 import com.example.services.DailyTipProvider
 import com.example.services.DebtPayoffEngine
 import com.example.services.FireEngine
+import android.os.Looper
+import androidx.activity.ComponentActivity
+import com.example.services.InAppReviewService
 import com.example.services.InvestmentEngine
 import com.example.services.RecurringTransactionEngine
 import com.example.services.RetirementEngine
 import com.example.services.TaxEngine
+import com.google.android.play.core.review.testing.FakeReviewManager
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -43,7 +47,9 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.Shadows
 import org.robolectric.annotation.Config
 import java.io.File
 import kotlin.random.Random
@@ -738,5 +744,41 @@ class FireAndInvestmentEngineTest {
         val reloaded = FireViewModel()
         reloaded.initPortfolioAndProfiles(context)
         assertTrue(reloaded.bookmarkedTipIds.value.contains(initialTip.id))
+    }
+
+    @Test
+    fun `first milestone unlock requests in-app review once and FakeReviewManager completes flow`() {
+        val activity = Robolectric.buildActivity(ComponentActivity::class.java).setup().get()
+        val fakeManager = FakeReviewManager(activity)
+        var flowSucceeded: Boolean? = null
+
+        InAppReviewService.requestAndLaunchReview(activity, reviewManager = fakeManager) { ok ->
+            flowSucceeded = ok
+        }
+        Shadows.shadowOf(Looper.getMainLooper()).idle()
+        assertEquals(true, flowSucceeded)
+
+        val vm = FireViewModel()
+        assertNull(vm.pendingInAppReviewMilestone.value)
+
+        // Clearing the high-APR card unlocks user's first new FI milestone & schedules Play In-App Review
+        val creditCard = vm.debtAccounts.value.first { it.annualApr >= 0.15 }
+        vm.removeDebtAccount(activity, creditCard.id)
+        val pending = vm.pendingInAppReviewMilestone.value
+        assertNotNull(pending)
+        assertTrue(pending!!.isUnlocked)
+        assertEquals("first_debt_dent", pending.id)
+
+        // Marking prompted clears pending state and persists flag so subsequent milestones don't re-prompt
+        vm.markInAppReviewPrompted(activity)
+        assertNull(vm.pendingInAppReviewMilestone.value)
+
+        vm.debtAccounts.value.toList().forEach { vm.removeDebtAccount(activity, it.id) }
+        assertNull(vm.pendingInAppReviewMilestone.value)
+
+        val reloaded = FireViewModel()
+        reloaded.initPortfolioAndProfiles(activity)
+        reloaded.updateParameters(reloaded.parameters.value.copy(currentSavings = 5_000_000.0))
+        assertNull(reloaded.pendingInAppReviewMilestone.value)
     }
 }

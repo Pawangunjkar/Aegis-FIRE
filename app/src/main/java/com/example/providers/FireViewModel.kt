@@ -210,8 +210,13 @@ class FireViewModel : ViewModel() {
     )
     val fiScoreSummary: StateFlow<FiScoreSummary> = _fiScoreSummary.asStateFlow()
 
+    private var isHydrating: Boolean = false
+    private var hasPromptedFirstMilestoneReview: Boolean = false
     private val _recentAchievementUnlock = MutableStateFlow<FiAchievement?>(null)
     val recentAchievementUnlock: StateFlow<FiAchievement?> = _recentAchievementUnlock.asStateFlow()
+
+    private val _pendingInAppReviewMilestone = MutableStateFlow<FiAchievement?>(null)
+    val pendingInAppReviewMilestone: StateFlow<FiAchievement?> = _pendingInAppReviewMilestone.asStateFlow()
 
     // Daily Offline Financial Quote & Tip state
     private var dailyTipIndex: Int = DailyTipProvider.dailyIndexForDate()
@@ -244,7 +249,7 @@ class FireViewModel : ViewModel() {
     private val budgetListAdapter = moshi.adapter<List<BudgetCategoryEntry>>(budgetListType)
 
     init {
-        recalculateFire()
+        recalculateFire(emitUnlockEvent = false)
         recalculateFiScore(emitUnlockEvent = false)
     }
 
@@ -338,7 +343,7 @@ class FireViewModel : ViewModel() {
             monthlyExpense = (p.monthlyExpense * factor).coerceAtLeast(500.0),
             inflationRate = if (switchingToInr && p.inflationRate < 0.04) 0.06 else if (!switchingToInr && p.inflationRate > 0.05) 0.03 else p.inflationRate
         )
-        recalculateFire()
+        recalculateFire(emitUnlockEvent = false)
 
         updateSipParams(
             _sipParams.value.let {
@@ -424,10 +429,10 @@ class FireViewModel : ViewModel() {
         recalculateFiScore(emitUnlockEvent = false)
     }
 
-    private fun recalculateFire() {
+    private fun recalculateFire(emitUnlockEvent: Boolean = true) {
         _result.value = FireEngine.calculateFire(_parameters.value)
         _monteCarloResult.value = null
-        recalculateFiScore(emitUnlockEvent = false)
+        recalculateFiScore(emitUnlockEvent = emitUnlockEvent)
     }
 
     fun runMonteCarlo() {
@@ -624,16 +629,22 @@ class FireViewModel : ViewModel() {
             ?.toSet()
             ?: emptySet()
         _bookmarkedTipIds.value = savedTipIds
-        val cachedPro = prefs.getBoolean(KEY_PRO_UNLOCKED, false)
-        if (cachedPro) {
-            _proState.value = _proState.value.copy(isProUnlocked = true)
+        isHydrating = true
+        try {
+            hasPromptedFirstMilestoneReview = prefs.getBoolean(KEY_IN_APP_REVIEW_PROMPTED, false)
+            val cachedPro = prefs.getBoolean(KEY_PRO_UNLOCKED, false)
+            if (cachedPro) {
+                _proState.value = _proState.value.copy(isProUnlocked = true)
+            }
+            initBilling(context)
+            processDueRecurringTransactions(context = context, requireAutoExecuteFlag = true)
+            recalculateCashflow()
+            recalculateDebtPayoff()
+            recalculatePortfolio()
+            recalculateFiScore(emitUnlockEvent = false)
+        } finally {
+            isHydrating = false
         }
-        initBilling(context)
-        processDueRecurringTransactions(context = context, requireAutoExecuteFlag = true)
-        recalculateCashflow()
-        recalculateDebtPayoff()
-        recalculatePortfolio()
-        recalculateFiScore(emitUnlockEvent = false)
     }
 
     // Google Play Billing ($3.99 One-Time Aegis Pro) actions
@@ -866,6 +877,13 @@ class FireViewModel : ViewModel() {
         _recentAchievementUnlock.value = null
     }
 
+    fun markInAppReviewPrompted(context: Context) {
+        hasPromptedFirstMilestoneReview = true
+        _pendingInAppReviewMilestone.value = null
+        val prefs = context.getSharedPreferences(PREFS_PORTFOLIO, Context.MODE_PRIVATE)
+        prefs.edit().putBoolean(KEY_IN_APP_REVIEW_PROMPTED, true).apply()
+    }
+
     private fun recalculateFiScore(emitUnlockEvent: Boolean = true) {
         val currentDebt = maxOf(
             _debtAccounts.value.sumOf { it.balance.coerceAtLeast(0.0) },
@@ -892,12 +910,15 @@ class FireViewModel : ViewModel() {
         )
         _fiScoreSummary.value = updated
 
-        if (emitUnlockEvent) {
+        if (emitUnlockEvent && !isHydrating) {
             val newlyUnlocked = updated.achievements.firstOrNull {
                 it.isUnlocked && !previousUnlockedIds.contains(it.id)
             }
             if (newlyUnlocked != null) {
                 _recentAchievementUnlock.value = newlyUnlocked
+                if (!hasPromptedFirstMilestoneReview) {
+                    _pendingInAppReviewMilestone.value = newlyUnlocked
+                }
             }
         }
     }
@@ -1435,6 +1456,7 @@ class FireViewModel : ViewModel() {
         private const val KEY_BUDGET_CUSTOM_INCOME = "budget_custom_income"
         private const val KEY_PEAK_DEBT_BALANCE = "peak_debt_balance"
         private const val KEY_BOOKMARKED_TIPS = "bookmarked_daily_tips"
+        private const val KEY_IN_APP_REVIEW_PROMPTED = "in_app_review_first_milestone_prompted"
         private const val KEY_PRO_UNLOCKED = "aegis_pro_unlocked"
     }
 }

@@ -5,4 +5,9 @@
     <string name="tab_calculators">Calculators</string>
     <string name="tab_portfolio">Portfolio</string>
     <string name="tab_roadmap">Roadmap</string>
+    <string name="author_name">Pawan Gunjkar</string>
+    <string name="author_email">pawangunjkar@gmail.com</string>
+    <string name="about_developer_title">ABOUT &amp; DEVELOPER</string>
+    <string name="about_developer_subtitle">Designed &amp; Engineered by</string>
+    <string name="contact_developer">Contact Developer</string>
 </resources>

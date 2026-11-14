@@ -74,6 +74,7 @@ import com.example.R
 import com.example.models.AppTab
 import com.example.providers.FireViewModel
 import com.example.services.AdMobService
+import com.example.services.InAppReviewService
 import com.example.services.PdfExportService
 import com.example.ui.components.AdMobBanner
 import com.example.ui.components.ProUpgradeDialog
@@ -88,6 +89,7 @@ import com.example.ui.theme.SurfaceCard
 import com.example.ui.theme.TextMuted
 import com.example.ui.theme.TextPrimary
 import com.example.ui.theme.TextSecondary
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -106,6 +108,7 @@ fun HomeScreen(viewModel: FireViewModel = viewModel()) {
     val portfolioSummary by viewModel.portfolioSummary.collectAsState()
     val proState by viewModel.proState.collectAsState()
     val recentUnlock by viewModel.recentAchievementUnlock.collectAsState()
+    val pendingReviewMilestone by viewModel.pendingInAppReviewMilestone.collectAsState()
 
     var isAdLoading by remember { mutableStateOf(false) }
     var showProDialog by remember { mutableStateOf(false) }
@@ -130,6 +133,17 @@ fun HomeScreen(viewModel: FireViewModel = viewModel()) {
         if (unlocked != null) {
             snackbarHostState.showSnackbar("Achievement Unlocked: ${unlocked.title} (+${unlocked.points} pts)")
             viewModel.clearRecentAchievementUnlock()
+        }
+    }
+
+    LaunchedEffect(pendingReviewMilestone) {
+        if (pendingReviewMilestone != null) {
+            delay(1200)
+            val activity = context.findHostActivity()
+            viewModel.markInAppReviewPrompted(context)
+            if (activity != null) {
+                InAppReviewService.requestAndLaunchReview(activity)
+            }
         }
     }
 
@@ -429,7 +443,8 @@ fun HomeScreen(viewModel: FireViewModel = viewModel()) {
                                 viewModel = viewModel,
                                 isAdLoading = isAdLoading,
                                 onRunMonteCarlo = runMonteCarloWithAd,
-                                onExportPdf = printPdfWithAd
+                                onExportPdf = printPdfWithAd,
+                                onFeedbackMessage = showMessage
                             )
                             AppTab.CALCULATORS -> CalculatorsTab(
                                 viewModel = viewModel,

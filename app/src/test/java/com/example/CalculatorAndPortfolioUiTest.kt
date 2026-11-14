@@ -362,10 +362,16 @@ class CalculatorAndPortfolioUiTest {
         val updatedUnlocked = vm.fiScoreSummary.value.unlockedCount
         assertEquals(true, updatedUnlocked > initialUnlocked)
         composeTestRule.onNodeWithText("$updatedUnlocked / ${vm.fiScoreSummary.value.totalAchievements} Unlocked").assertIsDisplayed()
+
+        // Verify Author & Developer Card on RoadmapTab
+        composeTestRule.onNodeWithTag("about_author_card").performScrollTo().assertIsDisplayed()
+        composeTestRule.onNodeWithText("Pawan Gunjkar").performScrollTo().assertIsDisplayed()
+        composeTestRule.onNodeWithText("pawangunjkar@gmail.com").performScrollTo().assertIsDisplayed()
+        composeTestRule.onNodeWithTag("contact_author_button").performScrollTo().assertIsDisplayed()
     }
 
     @Test
-    fun `fire planner dashboard displays daily financial quote card and cycles tips offline`() {
+    fun `fire planner dashboard displays daily financial quote card, cycles tips offline, and opens author dialog`() {
         val vm = FireViewModel()
         composeTestRule.setContent {
             AegisFireTheme {
@@ -390,5 +396,11 @@ class CalculatorAndPortfolioUiTest {
         composeTestRule.waitForIdle()
         assertEquals(true, vm.bookmarkedTipIds.value.contains(vm.dailyTip.value.id))
         composeTestRule.onNodeWithText("Saved to favorites").assertIsDisplayed()
+
+        composeTestRule.onNodeWithTag("author_footer_badge").performScrollTo().performClick()
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithText("Aegis FIRE • Developer").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Pawan Gunjkar").assertIsDisplayed()
+        composeTestRule.onNodeWithText("pawangunjkar@gmail.com").assertIsDisplayed()
     }
 }
