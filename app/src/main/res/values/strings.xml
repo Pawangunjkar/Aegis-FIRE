@@ -10,4 +10,7 @@
     <string name="about_developer_title">ABOUT &amp; DEVELOPER</string>
     <string name="about_developer_subtitle">Designed &amp; Engineered by</string>
     <string name="contact_developer">Contact Developer</string>
+    <string name="privacy_policy_title">Privacy Policy</string>
+    <string name="privacy_policy_effective_date">Effective Date: November 14, 2026</string>
+    <string name="privacy_policy_cta">View Privacy Policy</string>
 </resources>

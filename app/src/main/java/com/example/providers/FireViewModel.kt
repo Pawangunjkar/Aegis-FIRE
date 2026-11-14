@@ -73,6 +73,9 @@ class FireViewModel : ViewModel() {
     private val _selectedTab = MutableStateFlow(AppTab.FIRE)
     val selectedTab: StateFlow<AppTab> = _selectedTab.asStateFlow()
 
+    private val _showPrivacyPolicy = MutableStateFlow(false)
+    val showPrivacyPolicy: StateFlow<Boolean> = _showPrivacyPolicy.asStateFlow()
+
     private val _parameters = MutableStateFlow(FireParameters())
     val parameters: StateFlow<FireParameters> = _parameters.asStateFlow()
 
@@ -255,6 +258,14 @@ class FireViewModel : ViewModel() {
 
     fun selectTab(tab: AppTab) {
         _selectedTab.value = tab
+    }
+
+    fun openPrivacyPolicy() {
+        _showPrivacyPolicy.value = true
+    }
+
+    fun closePrivacyPolicy() {
+        _showPrivacyPolicy.value = false
     }
 
     fun selectCalculatorMode(mode: CalculatorMode) {

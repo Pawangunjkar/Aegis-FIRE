@@ -400,6 +400,10 @@ fun FirePlannerTab(
     if (showAuthorDialog) {
         AboutAuthorDialog(
             onFeedbackMessage = onFeedbackMessage,
+            onOpenPrivacyPolicy = {
+                showAuthorDialog = false
+                viewModel.openPrivacyPolicy()
+            },
             onDismiss = { showAuthorDialog = false }
         )
     }

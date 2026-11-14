@@ -81,6 +81,7 @@ import com.example.ui.components.ProUpgradeDialog
 import com.example.ui.screens.CalculatorsTab
 import com.example.ui.screens.FirePlannerTab
 import com.example.ui.screens.PortfolioTab
+import com.example.ui.screens.PrivacyPolicyScreen
 import com.example.ui.screens.RoadmapTab
 import com.example.ui.theme.AmberGold
 import com.example.ui.theme.DeepObsidian
@@ -109,6 +110,7 @@ fun HomeScreen(viewModel: FireViewModel = viewModel()) {
     val proState by viewModel.proState.collectAsState()
     val recentUnlock by viewModel.recentAchievementUnlock.collectAsState()
     val pendingReviewMilestone by viewModel.pendingInAppReviewMilestone.collectAsState()
+    val showPrivacyPolicy by viewModel.showPrivacyPolicy.collectAsState()
 
     var isAdLoading by remember { mutableStateOf(false) }
     var showProDialog by remember { mutableStateOf(false) }
@@ -222,6 +224,16 @@ fun HomeScreen(viewModel: FireViewModel = viewModel()) {
                 onReward = doShare
             )
         }
+    }
+
+    if (showPrivacyPolicy) {
+        PrivacyPolicyScreen(
+            onBack = { viewModel.closePrivacyPolicy() },
+            onFeedbackMessage = { msg ->
+                scope.launch { snackbarHostState.showSnackbar(msg) }
+            }
+        )
+        return
     }
 
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {

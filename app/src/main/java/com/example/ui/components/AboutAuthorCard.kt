@@ -20,8 +20,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Code
 import androidx.compose.material.icons.rounded.Email
@@ -60,6 +62,7 @@ import com.example.ui.theme.TextSecondary
 @Composable
 fun AboutAuthorCard(
     onFeedbackMessage: (String) -> Unit = {},
+    onOpenPrivacyPolicy: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -178,7 +181,7 @@ fun AboutAuthorCard(
                     modifier = Modifier.size(16.dp)
                 )
                 Text(
-                    text = "100% on-device financial calculations. No AI, no cloud tracking.",
+                    text = "Offline-first financial calculations. Collects no user data.",
                     color = TextSecondary,
                     fontSize = 11.sp
                 )
@@ -188,7 +191,7 @@ fun AboutAuthorCard(
 
             OutlinedButton(
                 onClick = {
-                    val resultMsg = launchAuthorEmail(context, authorEmail)
+                    val resultMsg = launchAuthorEmailIntent(context, authorEmail)
                     if (resultMsg != null) {
                         onFeedbackMessage(resultMsg)
                     }
@@ -213,6 +216,33 @@ fun AboutAuthorCard(
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 12.sp
                 )
+            }
+
+            if (onOpenPrivacyPolicy != null) {
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedButton(
+                    onClick = onOpenPrivacyPolicy,
+                    border = BorderStroke(1.dp, EmeraldGreen.copy(alpha = 0.45f)),
+                    shape = RoundedCornerShape(10.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp)
+                        .testTag("open_privacy_policy_button")
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.VerifiedUser,
+                        contentDescription = null,
+                        tint = EmeraldGreen,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        text = stringResource(id = R.string.privacy_policy_cta),
+                        color = EmeraldGreen,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 12.sp
+                    )
+                }
             }
         }
     }
@@ -244,7 +274,7 @@ fun AuthorFooterBadge(
             fontWeight = FontWeight.Medium
         )
         Text(
-            text = "Developer Info",
+            text = "Developer & Privacy",
             color = CyanAccent,
             fontSize = 11.sp,
             fontWeight = FontWeight.SemiBold
@@ -255,6 +285,7 @@ fun AuthorFooterBadge(
 @Composable
 fun AboutAuthorDialog(
     onFeedbackMessage: (String) -> Unit,
+    onOpenPrivacyPolicy: (() -> Unit)? = null,
     onDismiss: () -> Unit
 ) {
     AlertDialog(
@@ -269,7 +300,12 @@ fun AboutAuthorDialog(
             )
         },
         text = {
-            AboutAuthorCard(onFeedbackMessage = onFeedbackMessage)
+            Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                AboutAuthorCard(
+                    onFeedbackMessage = onFeedbackMessage,
+                    onOpenPrivacyPolicy = onOpenPrivacyPolicy
+                )
+            }
         },
         confirmButton = {
             TextButton(onClick = onDismiss) {
@@ -279,10 +315,14 @@ fun AboutAuthorDialog(
     )
 }
 
-private fun launchAuthorEmail(context: Context, email: String): String? {
+internal fun launchAuthorEmailIntent(
+    context: Context,
+    email: String,
+    subject: String = "Aegis FIRE Feedback (v${BuildConfig.VERSION_NAME})"
+): String? {
     val intent = Intent(Intent.ACTION_SENDTO).apply {
         data = Uri.parse("mailto:$email")
-        putExtra(Intent.EXTRA_SUBJECT, "Aegis FIRE Feedback (v${BuildConfig.VERSION_NAME})")
+        putExtra(Intent.EXTRA_SUBJECT, subject)
     }
     return try {
         context.startActivity(intent)

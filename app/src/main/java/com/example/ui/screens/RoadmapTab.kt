@@ -317,7 +317,10 @@ fun RoadmapTab(
         }
 
         Spacer(modifier = Modifier.height(20.dp))
-        AboutAuthorCard(onFeedbackMessage = onExportFeedback)
+        AboutAuthorCard(
+            onFeedbackMessage = onExportFeedback,
+            onOpenPrivacyPolicy = { viewModel.openPrivacyPolicy() }
+        )
         Spacer(modifier = Modifier.height(24.dp))
     }
 }

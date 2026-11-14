@@ -15,6 +15,7 @@ import com.example.ui.components.ProUpgradeDialog
 import com.example.ui.screens.CalculatorsTab
 import com.example.ui.screens.FirePlannerTab
 import com.example.ui.screens.PortfolioTab
+import com.example.ui.screens.PrivacyPolicyScreen
 import com.example.ui.screens.RoadmapTab
 import com.example.ui.theme.AegisFireTheme
 import org.junit.Assert.assertEquals
@@ -368,6 +369,10 @@ class CalculatorAndPortfolioUiTest {
         composeTestRule.onNodeWithText("Pawan Gunjkar").performScrollTo().assertIsDisplayed()
         composeTestRule.onNodeWithText("pawangunjkar@gmail.com").performScrollTo().assertIsDisplayed()
         composeTestRule.onNodeWithTag("contact_author_button").performScrollTo().assertIsDisplayed()
+        composeTestRule.onNodeWithTag("open_privacy_policy_button").performScrollTo().performClick()
+        composeTestRule.waitForIdle()
+        assertEquals(true, vm.showPrivacyPolicy.value)
+        vm.closePrivacyPolicy()
     }
 
     @Test
@@ -400,7 +405,32 @@ class CalculatorAndPortfolioUiTest {
         composeTestRule.onNodeWithTag("author_footer_badge").performScrollTo().performClick()
         composeTestRule.waitForIdle()
         composeTestRule.onNodeWithText("Aegis FIRE • Developer").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Pawan Gunjkar").assertIsDisplayed()
-        composeTestRule.onNodeWithText("pawangunjkar@gmail.com").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Pawan Gunjkar").performScrollTo().assertIsDisplayed()
+        composeTestRule.onNodeWithText("pawangunjkar@gmail.com").performScrollTo().assertIsDisplayed()
+        composeTestRule.onNodeWithTag("open_privacy_policy_button").performScrollTo().performClick()
+        composeTestRule.waitForIdle()
+        assertEquals(true, vm.showPrivacyPolicy.value)
+    }
+
+    @Test
+    fun `privacy policy screen states offline first, zero data collection, author contact info, and navigates back`() {
+        var backCalled = false
+        composeTestRule.setContent {
+            AegisFireTheme {
+                PrivacyPolicyScreen(onBack = { backCalled = true })
+            }
+        }
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithTag("privacy_policy_screen").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Offline-First & Zero Data Collection").assertIsDisplayed()
+        composeTestRule.onNodeWithText("1. Offline-First Financial Engine").performScrollTo().assertIsDisplayed()
+        composeTestRule.onNodeWithText("2. Zero Personal or Financial Data Collection").performScrollTo().assertIsDisplayed()
+        composeTestRule.onNodeWithText("Author: Pawan Gunjkar").performScrollTo().assertIsDisplayed()
+        composeTestRule.onNodeWithText("Email: pawangunjkar@gmail.com").performScrollTo().assertIsDisplayed()
+        composeTestRule.onNodeWithTag("privacy_contact_email_button").performScrollTo().assertIsDisplayed()
+
+        composeTestRule.onNodeWithTag("privacy_policy_back_button").performClick()
+        composeTestRule.waitForIdle()
+        assertEquals(true, backCalled)
     }
 }
